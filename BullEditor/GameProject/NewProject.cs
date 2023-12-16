@@ -71,6 +71,7 @@ namespace BullEditor.GameProject
                 path += @"\";
             }
             path += $@"{ProjectName}\";
+            //Test
             
         }
         private ObservableCollection<ProjectTemplate> _projectTemplates = new ObservableCollection<ProjectTemplate>();  
