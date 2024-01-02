@@ -50,7 +50,7 @@ namespace BullEditor.GameProject
         }
 
         private string _projectPath = $@"{Environment.GetFolderPath(
-            Environment.SpecialFolder.MyDocuments) }\BullProject\"; 
+            Environment.SpecialFolder.MyDocuments) }\BullProjects\"; 
         public string ProjectPath
         {
             get => _projectPath;
@@ -94,6 +94,8 @@ namespace BullEditor.GameProject
                 }
             }
         }
+        private ObservableCollection<ProjectTemplate> _projectTemplates = new ObservableCollection<ProjectTemplate>();
+        public ReadOnlyObservableCollection<ProjectTemplate> ProjectTemplates { get; }
         private bool ValidateProjectPath()
         {
             var path = ProjectPath;
@@ -119,7 +121,7 @@ namespace BullEditor.GameProject
             {
                 ErrorMsg = "Invalid character(s) used in project name.";
             }
-            else if(Directory.Exists(ProjectPath) && Directory.EnumerateFileSystemEntries(path).Any()) 
+            else if(Directory.Exists(path) && Directory.EnumerateFileSystemEntries(path).Any()) 
             {
                 ErrorMsg = "Selected project folder already exists and is not empty.";
             }
@@ -130,10 +132,45 @@ namespace BullEditor.GameProject
             }
             return IsValid;
         }
-        private ObservableCollection<ProjectTemplate> _projectTemplates = new ObservableCollection<ProjectTemplate>();  
-        public ReadOnlyObservableCollection<ProjectTemplate> ProjectTemplates
+
+        //Returns path string
+        public string CreateProject(ProjectTemplate template)
         {
-            get;
+            ValidateProjectPath();
+            if (!IsValid)
+            {
+                return string.Empty;
+            }
+
+            
+            if (!Path.EndsInDirectorySeparator(ProjectPath)) ProjectPath += @"\";
+            var path = $@"{ProjectPath}{ProjectName}\";
+            try
+            {
+                if(!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+                foreach(var folder in template.Folders)
+                {
+                    Directory.CreateDirectory(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(path), folder)));
+                }
+                var dirInfo = new DirectoryInfo(path + @".Bull\");
+                dirInfo.Attributes |= FileAttributes.Hidden;
+                File.Copy(template.IconFilePath, Path.GetFullPath(Path.Combine(dirInfo.FullName, "icon.png")));
+                File.Copy(template.IconFilePath, Path.GetFullPath(Path.Combine(dirInfo.FullName, "screen.png")));
+
+                var projectXml = File.ReadAllText(template.ProjectFilePath);
+                projectXml = string.Format(projectXml, ProjectName, ProjectPath);
+                var projectPath = Path.GetFullPath(Path.Combine(path, $"{ProjectName}{Project.Extension}"));
+                File.WriteAllText(projectPath, projectXml);
+                return path;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                return String.Empty;
+            }
         }
         public NewProject()
         {

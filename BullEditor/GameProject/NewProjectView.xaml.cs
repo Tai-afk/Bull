@@ -24,5 +24,19 @@ namespace BullEditor.GameProject
         {
             InitializeComponent();
         }
+
+        private void OnCreate_Button_Click(object sender, RoutedEventArgs e)
+        {
+            var vm = DataContext as NewProject;
+            var projectPath = vm.CreateProject(templateListBox.SelectedItem as ProjectTemplate);
+            bool dialogueResult = false;
+            var win = Window.GetWindow(this);
+            if ((!string.IsNullOrEmpty(projectPath)))
+            {
+                dialogueResult = true;
+            }
+            win.DialogResult = dialogueResult;
+            win.Close();
+        }
     }
 }
